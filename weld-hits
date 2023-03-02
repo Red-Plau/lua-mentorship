@@ -1,0 +1,49 @@
+--server script
+
+-- Obtain Players, Player, Character --
+local Players = game:GetService("Players")
+local Character
+
+-- Obtain tool --
+local Staff = script.Parent.Parent.Parent
+
+local Hold -- Variable for welding
+
+-- Welding tool to left hand when it gets equipped, "unwelding" as soon as it's unequipped --
+Staff.Equipped:Connect(function()
+	Character = Staff.Parent
+	Hold = Character.RightHand:WaitForChild("RightGrip")
+	if not Hold then return end
+	
+	Hold.Part0 = Character.LeftHand
+	Hold.Part1 = Staff.Handle
+	Hold.Name = "LeftGrip"
+	Hold.Parent = Character.LeftHand
+end)
+
+Staff.Unequipped:Connect(function()
+	Character = Staff.Parent
+	Hold = Character.LeftHand:WaitForChild("LeftGrip")
+	if not Hold then return end
+	
+	Hold.Part0 = Character.RightHand
+	Hold.Part1 = nil
+	Hold.Name = "RightGrip"
+	Hold.Parent = Character.RightHand
+end)
+
+-- If there are at most 10 studs between Player and Target, damage Target --
+script.Parent.Parent.RemoteStaff.OnServerEvent:Connect(function(Player, Target, TargetPart)
+	if not Player or not Player.Character.HumanoidRootPart or not Player.Character:FindFirstChild("Staff") or Player.Character.Humanoid.Health <= 0 or not Target then return end
+	
+	local TargetPart = Target:FindFirstChild(TargetPart.Name)
+	if not TargetPart then return end
+	
+	local Distance = (Player.Character.HumanoidRootPart.Position - Target.HumanoidRootPart.Position).Magnitude
+	if Distance > 6 then return end
+	
+	Target.Humanoid:TakeDamage(25)
+	script.Parent.Parent.RemoteStaff:FireAllClients(Player.Name, Target.HumanoidRootPart)
+	Staff.Hit:Play()
+end)
+

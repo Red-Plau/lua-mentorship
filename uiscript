@@ -1,0 +1,56 @@
+local ProximityPromptService = game:GetService("ProximityPromptService")
+local ProximityText = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui"):WaitForChild("ScreenGui").TextLabel
+local Stroke = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui"):WaitForChild("ScreenGui").TextLabel.UIStroke
+
+local Label = workspace.ClickToDestroy.SurfaceGui.TextLabel -- Text label on vent
+
+local TweenService = game:GetService("TweenService")
+
+function ShowText(string)
+	if Label.Text ~= "VENT DESTROYED" then
+		ProximityText.Text = string
+		TweenService:Create(
+			ProximityText, 
+			TweenInfo.new( 
+				0.5
+			), 
+			{ TextTransparency = 0 }
+		):Play()
+		TweenService:Create(
+			Stroke, 
+			TweenInfo.new( 
+				0.5
+			), 
+			{ Transparency = 0 }
+		):Play()
+	end
+end
+
+function HideText()
+	TweenService:Create(
+		ProximityText, 
+		TweenInfo.new( 
+			0.5
+		), 
+		{ TextTransparency = 1 }
+	):Play()
+	TweenService:Create(
+		Stroke, 
+		TweenInfo.new( 
+			0.5
+		), 
+		{ Transparency = 1 }
+	):Play()
+end
+
+ProximityPromptService.PromptShown:Connect(function(Prompt)
+	if Prompt.Name == "ProximityPrompt" then
+		ShowText("I should destroy this vent...")
+	end
+end)
+
+ProximityPromptService.PromptHidden:Connect(function(Prompt)
+	if Prompt.Name == "ProximityPrompt" then
+		HideText()
+	end
+end)

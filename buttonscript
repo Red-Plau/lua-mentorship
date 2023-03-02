@@ -1,0 +1,44 @@
+--serverscript which should be merged with the door script
+
+local ProximityPromptService = game:GetService("ProximityPromptService")
+
+_G.DestroyVent = false -- Variable checking for permission to open the door
+
+local ClickDetector = workspace.ClickToDestroy.ClickDetector -- Detects clicks on the vent
+local Label = workspace.ClickToDestroy.SurfaceGui.TextLabel -- Text label on vent
+local ClickCount = 0 -- Counts amount of times vent has been clicked
+
+local Particles = workspace.ClickToDestroy.ParticleEmitter -- Dust
+
+local Explosion = workspace.ClickToDestroy.Explosion -- Audio output: explosion once the vent is destroyed
+local Clang = workspace.ClickToDestroy.Clang -- Audio output: every time vent is clicked
+
+Explosion.Looped = false -- Will play only once
+Clang.Looped = false
+
+ClickDetector.MouseClick:Connect(function(Player)
+	local Character = Player.Character or Player.CharacterAdded:Wait()
+	local Humanoid = Character.Humanoid
+	if (Humanoid.Health < 0) or ((Character.HumanoidRootPart.Position - ClickDetector.Parent.Position).Magnitude > 15) or _G.DestroyVent then
+		return
+	else
+		Clang:Play()
+		if ClickCount < 50 then
+			ClickCount += 1
+			Label.Text = string.format("Click to destroy wall [ %s / 50 ]", ClickCount)
+			Particles.Enabled = true
+			wait (0.2)
+			Particles.Enabled = false
+		end
+		if ClickCount == 50 and not _G.DestroyVent then
+			Explosion:Play()
+			_G.DestroyVent = true
+			ProximityPromptService.Enabled = false
+			Label.Text = "VENT DESTROYED"
+			repeat wait() until not _G.DestroyVent
+			ClickCount = 0
+			Label.Text = string.format("Click to destroy wall [ %s / 50 ]", ClickCount)
+			ProximityPromptService.Enabled = true
+		end
+	end
+end

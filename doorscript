@@ -1,0 +1,174 @@
+local TweenService = game:GetService("TweenService")
+
+local TopGate = workspace.IronDoor.TopGate
+local BottomGate = workspace.IronDoor.BottomGate
+local TopDoor = workspace.IronDoor.TopDoor
+local BottomDoor = workspace.IronDoor.BottomDoor
+
+-- Various audio assets from SCP:CB and SCP:SL
+local Sparks = workspace.IronDoor.Sparks
+local GateOpen = workspace.IronDoor.GateOpen
+local GateClose = workspace.IronDoor.GateClose
+
+-- Particle effects
+local PSparks = workspace.ClickToDestroy.Sparks -- Electric Sparks
+
+------- OPEN TWEENS -------
+local OpenTopGate = TweenService:Create(
+	TopGate,
+	TweenInfo.new(
+		1.45, -- Matches duration of audio where door is opening
+		Enum.EasingStyle.Linear
+	),
+	{Position = TopGate.Position + Vector3.new(0, 6, 0)}
+)
+
+local OpenBottomGate1 = TweenService:Create(
+	BottomGate,
+	TweenInfo.new(
+		1.45, 
+		Enum.EasingStyle.Quint,
+		Enum.EasingDirection.Out
+	),
+	{Position = BottomGate.Position + Vector3.new(0, 6, 0)}
+)
+
+local OpenBottomGate2 = TweenService:Create(
+	BottomGate,
+	TweenInfo.new(
+		1.45, 
+		Enum.EasingStyle.Linear
+	),
+	{Position = BottomGate.Position + Vector3.new(0, 12, 0)}
+)
+
+local OpenTopDoor = TweenService:Create(
+	TopDoor,
+	TweenInfo.new(
+		1.45,
+		Enum.EasingStyle.Linear
+	),
+	{Position = TopDoor.Position + Vector3.new(0, 6, 0)}
+)
+
+local OpenBottomDoor1 = TweenService:Create(
+	BottomDoor,
+	TweenInfo.new(
+		1.45, 
+		Enum.EasingStyle.Quint,
+		Enum.EasingDirection.Out
+	),
+	{Position = BottomDoor.Position + Vector3.new(0, 6, 0)}
+)
+
+local OpenBottomDoor2 = TweenService:Create(
+	BottomDoor,
+	TweenInfo.new(
+		1.45, 
+		Enum.EasingStyle.Linear
+	),
+	{Position = BottomDoor.Position + Vector3.new(0, 12, 0)}
+)
+---------------------------
+
+------ CLOSE  TWEENS ------
+local CloseTopGate = TweenService:Create(
+	TopGate,
+	TweenInfo.new(
+		1.4, -- Matches duration of audio where door is closing
+		Enum.EasingStyle.Linear
+	),
+	{Position = TopGate.Position}
+)
+
+local CloseBottomGate1 = TweenService:Create(
+	BottomGate,
+	TweenInfo.new(
+		1.4,
+		Enum.EasingStyle.Linear
+	),
+	{Position = BottomGate.Position + Vector3.new(0, 6, 0)}
+)
+
+local CloseBottomGate2 = TweenService:Create(
+	BottomGate,
+	TweenInfo.new(
+		1.4,
+		Enum.EasingStyle.Linear
+	),
+	{Position = BottomGate.Position}
+)
+
+local CloseTopDoor = TweenService:Create(
+	TopDoor,
+	TweenInfo.new(
+		1.4,
+		Enum.EasingStyle.Linear
+	),
+	{Position = TopDoor.Position}
+)
+
+local CloseBottomDoor1 = TweenService:Create(
+	BottomDoor,
+	TweenInfo.new(
+		1.4,
+		Enum.EasingStyle.Linear
+	),
+	{Position = BottomDoor.Position + Vector3.new(0, 6, 0)}
+)
+
+local CloseBottomDoor2 = TweenService:Create(
+	BottomDoor,
+	TweenInfo.new(
+		1.4,
+		Enum.EasingStyle.Linear
+	),
+	{Position = BottomDoor.Position}
+)
+---------------------------
+
+while true do
+	repeat wait() until _G.DestroyVent
+
+	if _G.DestroyVent then
+		wait(1.5)-- Let the explosion sound play out
+		Sparks:Play()
+		PSparks.Enabled = true
+		
+		Sparks.Ended:Wait()
+		
+		PSparks.Enabled = false
+		
+		GateOpen:Play()
+		-- Open 
+		OpenBottomGate1:Play()
+		OpenBottomDoor1:Play()
+		
+		OpenBottomGate1.Completed:Wait()
+		
+		OpenBottomGate2:Play()
+		OpenBottomDoor2:Play()
+		OpenTopGate:Play()
+		OpenTopDoor:Play()
+		
+		OpenTopDoor.Completed:Wait()
+		
+		wait (10)
+		
+		GateClose:Play()
+		-- Close 
+		CloseBottomGate1:Play()
+		CloseBottomDoor1:Play()
+		CloseTopGate:Play()
+		CloseTopDoor:Play()
+		
+		CloseTopGate.Completed:Wait()
+		
+		CloseBottomGate2:Play()
+		CloseBottomDoor2:Play()
+		
+		CloseBottomGate2.Completed:Wait()
+		
+		_G.DestroyVent = false
+	end
+end

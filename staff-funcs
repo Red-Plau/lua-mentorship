@@ -1,0 +1,122 @@
+-- Obtain services --
+local Staff = script.Parent
+local RemoteStaff = script:WaitForChild("RemoteStaff")
+local RunService = game:GetService"RunService"
+local Heartbeat = RunService.Heartbeat
+local Debris = game:GetService("Debris")
+
+-- Fetching humanoid from LocalPlayer --
+local Players = game:GetService("Players")
+local Player = Players.LocalPlayer
+local Character
+local Humanoid
+
+-- Variables for attacking with Staff --
+local Equipped = false
+local Swinging = false
+local LastPos = { } -- To track previous positions
+local RcTable = { } -- Tracks Raycast.Instances
+
+-- Variables for Particle Emission --
+local Particles = Staff:WaitForChild("Tip"):WaitForChild("Particles")
+Particles.Enabled = false
+local TimeToTake = 2.5
+local Accumulated = 0
+
+-- Animation variables --
+local Animator 
+local Animation
+local AnimationTrack
+
+local function VisualizeRay(Origin, Direction) -- To see Raycasting
+	local Part = script.Part:Clone()
+	Part.CFrame = CFrame.new(Origin, Direction) * CFrame.new(0, 0, -(Origin-Direction).Magnitude/2)
+	Part.Size = Vector3.new(0.075, 0.075, (Origin-Direction).Magnitude)
+	Part.Parent = workspace
+	Debris:AddItem(Part, 1)
+	return Part
+end
+
+function Castray(Origin, Direction, RcTable) -- Raycasts given origin, direction and RcTable
+	local RcParams = RaycastParams.new()
+	RcParams.FilterType = Enum.RaycastFilterType.Blacklist
+	RcParams.FilterDescendantsInstances = { Player.Character }
+	local Raycast = workspace:Raycast(Origin, Direction, RcParams)
+	VisualizeRay(Origin, Direction)
+	
+	if Raycast then
+		if not table.find(RcTable, Raycast.Instance.Parent) then
+			local Human = Raycast.Instance.Parent:FindFirstChild("Humanoid")
+			
+			if Human then
+				table.insert(RcTable, Human.Parent)
+				script.RemoteStaff:FireServer(Human.Parent, Raycast.Instance)
+			end
+		end
+	end
+end
+
+Heartbeat:Connect(function(DeltaTime) -- Every 2.5 seconds, 5 sparkles are emitted from the tip of Staff
+	if Equipped then
+		Accumulated += DeltaTime
+		if Accumulated < TimeToTake then return end
+		
+		Accumulated -= TimeToTake
+		
+		for _, Player in ipairs(Players:GetChildren()) do
+			if Player.Character and Player.Character:FindFirstChild("Staff") then
+				Player.Character.Staff.Tip.Particles:Emit(5) --Shoots at all players in server
+			end
+		end
+	end
+end)
+
+Heartbeat:Connect(function() -- If attacking, cast rays and update positions
+	if not Swinging or not Player or Player.Character.Humanoid.Health <= 0 then return end
+	
+	Castray(Staff.Tip.Position, LastPos.Tip, RcTable)
+	Castray(Staff.Handle.Position, LastPos.Handle, RcTable)
+	-- Update positions --
+	LastPos = { Tip = Staff.Tip.Position, Handle = Staff.Handle.Position }
+end)
+
+Staff.Equipped:Connect(function () -- When Staff is equipped
+	Character = Staff.Parent or Player.Character or Player.CharacterAdded:Wait()
+	Humanoid = Character:WaitForChild("Humanoid")
+	Animator = Humanoid:WaitForChild("Animator")
+	
+	if not Player or Player.Character.Humanoid.Health <= 0 then return end
+	
+	Equipped = true
+	-- Once that's done, create a new "Animation" instance from Anim --
+	Animation = Instance.new("Animation")
+	Animation.AnimationId = "rbxassetid://12333111905"
+	-- Load animation onto animator --
+	AnimationTrack = Animator:LoadAnimation(Animation)
+end)
+
+Staff.Activated:Connect(function() -- When clicking while Staff is equipped
+	if Swinging or not Equipped or not Player or Player.Character.Humanoid.Health <= 0 then return end
+	
+	Swinging = true
+	table.clear(RcTable)
+	-- Update positions --
+	LastPos = { Tip = Staff.Tip.Position, Handle = Staff.Handle.Position }
+	
+	if not AnimationTrack.IsPlaying and not script.Parent.Swing.IsPlaying then 
+		AnimationTrack:Play()
+		script.Parent.Swing:Play()
+		Swinging = true
+	end
+	
+	AnimationTrack.Ended:Connect(function()
+		Swinging = false
+	end)
+end)
+
+Staff.Unequipped:Connect(function () -- When Staff is unequipped
+	AnimationTrack:Stop()
+	Swinging = false
+	Equipped = false
+	Accumulated = 0
+end)
